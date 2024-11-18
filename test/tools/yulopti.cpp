@@ -91,7 +91,7 @@ public:
 		try
 		{
 			auto ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
-			if (!m_astRoot || errorReporter.hasErrors())
+			if (!ast || errorReporter.hasErrors())
 			{
 				std::cerr << "Error parsing source." << std::endl;
 				printErrors(_charStream, errors);
@@ -180,7 +180,7 @@ public:
 		parse(_source);
 		disambiguate();
 		OptimiserSuite{m_context}.runSequence(_steps, *m_astRoot);
-		std::cout << AsmPrinter{}(*m_astRoot) << std::endl;
+		std::cout << AsmPrinter{m_dialect}(*m_astRoot) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -217,7 +217,7 @@ public:
 						break;
 					case ';':
 					{
-						Object obj;
+						Object obj{m_dialect};
 						obj.setCode(std::make_shared<AST>(std::get<yul::Block>(ASTCopier{}(*m_astRoot))));
 						*m_astRoot = std::get<1>(StackCompressor::run(m_dialect, obj, true, 16));
 						break;
@@ -228,7 +228,7 @@ public:
 							*m_astRoot
 						);
 				}
-				_source = AsmPrinter{}(*m_astRoot);
+				_source = AsmPrinter{m_dialect}(*m_astRoot);
 			}
 			catch (...)
 			{
